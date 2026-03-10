@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Is Dan Working?</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+  <!-- ── Banner: today's status ─────────────────────────────────────────────── -->
+  <header id="banner" class="banner">
+    <h1>Is Dan working today?</h1>
+    <div id="banner-face"></div>
+    <span id="banner-status"></span>
+    <span id="banner-cycle-day"></span>
+  </header>
+
+  <main class="container">
+
+    <!-- ── Jump to date ────────────────────────────────────────────────────── -->
+    <section class="card">
+      <div class="jump-row">
+        <label for="date-picker">Jump to date:</label>
+        <input type="date" id="date-picker" />
+        <button class="btn btn-primary" id="jump-btn">Go</button>
+      </div>
+    </section>
+
+    <!-- ── Monthly calendar ────────────────────────────────────────────────── -->
+    <section class="card">
+      <div class="cal-header">
+        <div class="cal-nav">
+          <button class="btn btn-secondary" id="prev-month">&#8592;</button>
+          <button class="btn btn-secondary" id="today-btn">Today</button>
+          <button class="btn btn-secondary" id="next-month">&#8594;</button>
+        </div>
+        <h2 id="cal-title"></h2>
+      </div>
+
+      <div class="cal-grid" id="cal-grid">
+        <!-- Day-of-week headers -->
+        <div class="cal-day-name">Sun</div>
+        <div class="cal-day-name">Mon</div>
+        <div class="cal-day-name">Tue</div>
+        <div class="cal-day-name">Wed</div>
+        <div class="cal-day-name">Thu</div>
+        <div class="cal-day-name">Fri</div>
+        <div class="cal-day-name">Sat</div>
+        <!-- Day cells are injected by app.js -->
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ── Day detail popup ────────────────────────────────────────────────────── -->
+  <div class="popup-overlay hidden" id="day-popup">
+    <div class="popup-box">
+      <button class="popup-close-btn" id="popup-close" aria-label="Close">&#10005;</button>
+      <div id="popup-content"></div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

@@ -247,7 +247,7 @@ document.getElementById('today-btn').addEventListener('click', () => {
 
 // ─── Date picker / Jump to date ───────────────────────────────────────────────
 
-document.getElementById('jump-btn').addEventListener('click', () => {
+datePicker.addEventListener('change', () => {
   const val = datePicker.value; // "YYYY-MM-DD"
   if (!val) return;
 
@@ -259,11 +259,6 @@ document.getElementById('jump-btn').addEventListener('click', () => {
   highlightWeekOf = target;
 
   renderCalendar();
-});
-
-// Also trigger on Enter key in the date input
-datePicker.addEventListener('keydown', (e) => {
-  if (e.key === 'Enter') document.getElementById('jump-btn').click();
 });
 
 // ─── Init ─────────────────────────────────────────────────────────────────────

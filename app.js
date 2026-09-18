@@ -1,22 +1,34 @@
 /**
  * Dan's Roster App — app.js
  *
- * Schedule: 4 days on, 4 days off, repeating 8-day cycle.
- *   Cycle days 1–4 = Work
- *   Cycle days 5–8 = Off
+ * Schedule: rotating 14-day cycle made up of these blocks, in order:
+ *   3 days on, 2 days off, 3 days on, 2 days off, 2 days on, 2 days off
+ *   (cycle days 1–3, 6–8, 11–12 = Work; 4–5, 9–10, 13–14 = Off)
  *
- * Reference: 11 March 2026 is cycle day 5 (first day off).
+ * Reference: 11 September 2026 is cycle day 1 (first day of the first
+ * 3-day work block).
  *
  * To find the cycle day for any date:
- *   1. Count days from 11 March 2026 to the target date.
- *   2. Add that offset to cycle day 5.
- *   3. Apply modulo 8 (adjusted so result is 1–8, not 0–8).
+ *   1. Count days from 11 September 2026 to the target date.
+ *   2. Add that offset to cycle day 1.
+ *   3. Apply modulo 14 (adjusted so result is 1–14, not 0–14).
  */
 
 // ─── Roster calculation ───────────────────────────────────────────────────────
 
-const REFERENCE_DATE = new Date(2026, 2, 11); // 11 March 2026 (month is 0-indexed)
-const REFERENCE_CYCLE_DAY = 5;                // Day 5 of the cycle
+const REFERENCE_DATE = new Date(2026, 8, 11); // 11 September 2026 (month is 0-indexed)
+const REFERENCE_CYCLE_DAY = 1;                // Day 1 of the cycle
+
+// The rotating blocks, in order, that make up the 14-day cycle.
+const CYCLE_BLOCKS = [
+  { length: 3, work: true  },
+  { length: 2, work: false },
+  { length: 3, work: true  },
+  { length: 2, work: false },
+  { length: 2, work: true  },
+  { length: 2, work: false },
+];
+const CYCLE_LENGTH = CYCLE_BLOCKS.reduce((sum, b) => sum + b.length, 0); // 14
 
 /**
  * Return the number of whole days between two Date objects (ignoring time).
@@ -29,20 +41,36 @@ function daysBetween(a, b) {
 }
 
 /**
- * Return the cycle day (1–8) for a given Date.
+ * Return the cycle day (1–14) for a given Date.
  */
 function getCycleDay(date) {
   const offset = daysBetween(REFERENCE_DATE, date);
-  // Shift into 0-based index, apply mod 8, then shift back to 1-based
-  const zeroBased = ((REFERENCE_CYCLE_DAY - 1 + offset) % 8 + 8) % 8;
+  // Shift into 0-based index, apply mod CYCLE_LENGTH, then shift back to 1-based
+  const zeroBased = ((REFERENCE_CYCLE_DAY - 1 + offset) % CYCLE_LENGTH + CYCLE_LENGTH) % CYCLE_LENGTH;
   return zeroBased + 1;
+}
+
+/**
+ * Return the block info for a given cycle day: whether it's a work day,
+ * and which day number within that block (1-based).
+ */
+function getBlockInfo(cycleDay) {
+  let remaining = cycleDay;
+  for (const block of CYCLE_BLOCKS) {
+    if (remaining <= block.length) {
+      return { work: block.work, dayInBlock: remaining, blockLength: block.length };
+    }
+    remaining -= block.length;
+  }
+  // Should never reach here, but fall back safely.
+  return { work: false, dayInBlock: 1, blockLength: 1 };
 }
 
 /**
  * Return true if the given Date is a work day.
  */
 function isWorkDay(date) {
-  return getCycleDay(date) <= 4;
+  return getBlockInfo(getCycleDay(date)).work;
 }
 
 // ─── State ────────────────────────────────────────────────────────────────────
@@ -68,16 +96,14 @@ const popupContent   = document.getElementById('popup-content');
 // ─── Banner ───────────────────────────────────────────────────────────────────
 
 function renderBanner() {
-  const work = isWorkDay(today);
-  const cd   = getCycleDay(today);
+  const work  = isWorkDay(today);
+  const block = getBlockInfo(getCycleDay(today));
 
   bannerStatus.textContent = work ? 'Yes' : 'No';
   bannerFace.textContent   = work ? '😢' : '😊';
-  // For work days cd is 1–4; for off days cd is 5–8, so subtract 4 to get 1–4
-  const dayNum = work ? cd : cd - 4;
   bannerCycleDay.textContent = work
-    ? `Today is work day ${dayNum}`
-    : `Today is day off ${dayNum}`;
+    ? `Today is work day ${block.dayInBlock}/${block.blockLength}`
+    : `Today is day off ${block.dayInBlock}/${block.blockLength}`;
 
   const banner = document.getElementById('banner');
   banner.className = work ? 'banner work' : 'banner off';
@@ -133,9 +159,9 @@ function renderCalendar() {
   }
 
   for (let d = 1; d <= lastDay.getDate(); d++) {
-    const date = new Date(viewYear, viewMonth, d);
-    const work = isWorkDay(date);
-    const cd   = getCycleDay(date);
+    const date  = new Date(viewYear, viewMonth, d);
+    const work  = isWorkDay(date);
+    const block = getBlockInfo(getCycleDay(date));
     const isToday   = sameDay(date, today);
     const isSelected = selectedDate && sameDay(date, selectedDate);
 
@@ -154,7 +180,7 @@ function renderCalendar() {
     cell.innerHTML = `
       <span class="cell-date">${d}</span>
       <span class="cell-emoji">${work ? '😢' : '🍺'}</span>
-      <span class="cell-label">${work ? `Work day ${cd}` : `Day off ${cd - 4}`}</span>
+      <span class="cell-label">${work ? `Work day ${block.dayInBlock}/${block.blockLength}` : `Day off ${block.dayInBlock}/${block.blockLength}`}</span>
     `;
 
     cell.addEventListener('click', () => showDayPopup(date));
@@ -168,8 +194,8 @@ function showDayPopup(date) {
   selectedDate = date;
   renderCalendar(); // re-render to show selected highlight
 
-  const work = isWorkDay(date);
-  const cd   = getCycleDay(date);
+  const work  = isWorkDay(date);
+  const block = getBlockInfo(getCycleDay(date));
   const dateStr = date.toLocaleDateString('en-AU', {
     weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
   });
@@ -177,7 +203,7 @@ function showDayPopup(date) {
   popupContent.innerHTML = `
     <p class="popup-date">${dateStr}</p>
     <p class="popup-status ${work ? 'work' : 'off'}">${work ? '😢 Work' : '🍺 Off'}</p>
-    <p class="popup-cycle">${work ? `Work day <strong>${cd}</strong>` : `Day off <strong>${cd - 4}</strong>`}</p>
+    <p class="popup-cycle">${work ? `Work day <strong>${block.dayInBlock}/${block.blockLength}</strong>` : `Day off <strong>${block.dayInBlock}/${block.blockLength}</strong>`}</p>
   `;
 
   popup.classList.remove('hidden');

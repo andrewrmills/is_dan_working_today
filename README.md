@@ -11,26 +11,32 @@ A simple static web app to instantly see whether Dan is working on any given day
 - Highlights today clearly in the calendar.
 - Fully responsive — works on mobile and desktop.
 
-## The 4 on / 4 off cycle
+## The rotating cycle
 
-The schedule follows an endlessly repeating 8-day cycle:
+The schedule follows an endlessly repeating 14-day cycle made up of these blocks:
 
 | Cycle day | Status |
 |-----------|--------|
 | 1         | Work   |
 | 2         | Work   |
 | 3         | Work   |
-| 4         | Work   |
+| 4         | Off    |
 | 5         | Off    |
-| 6         | Off    |
-| 7         | Off    |
-| 8         | Off    |
+| 6         | Work   |
+| 7         | Work   |
+| 8         | Work   |
+| 9         | Off    |
+| 10        | Off    |
+| 11        | Work   |
+| 12        | Work   |
+| 13        | Off    |
+| 14        | Off    |
 
-Then it repeats from day 1.
+Then it repeats from day 1. (3 on, 2 off, 3 on, 2 off, 2 on, 2 off.)
 
 ## Reference date
 
-**11 March 2026 = Cycle day 5** (first day off).
+**11 September 2026 = Cycle day 1** (first day of the first work block).
 
 The app uses this fixed anchor to calculate the cycle day for any date — past or future — using simple modulo arithmetic.
 
